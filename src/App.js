@@ -1,53 +1,51 @@
-import React, { useEffect, useState } from "react";
-import * as XLSX from "xlsx";
+import React, { useState, useEffect } from "react";
+
+import Footer from "./components/Footer";
+import UpgradeInfo from "./components/UpgradeInfo"
+import UpgradeCalculator from "./components/UpgradeCalculator"
+import GemTransfer from "./components/GemTransfer"
+
+import { readExcel } from "./utils/readExcel"
+
+const tabs = {
+  TAB01: {id: 'upgrade_info', label: 'Upgrade info'},
+  TAB02: {id: 'upgrade_calculator', label: 'Upgrade calculator'},
+  TAB03: {id: 'gem_tranfer', label: 'Gem tranfer'},
+}
 
 function App() {
-  const [data, setData] = useState([]); // เก็บข้อมูลจาก Excel
+  const [data, setData] = useState([]);
+  const [error, setError] = useState(null);
+  const [tab, setTab] = useState(tabs.TAB01.id)
 
+  // เรียกฟังก์ชัน fetchExcelData เมื่อคอมโพเนนต์ถูกเรนเดอร์
   useEffect(() => {
-    // ฟังก์ชันอ่านไฟล์ Excel
-    const fetchData = async () => {
-      try {
-        // ดึงไฟล์ Excel จาก Local (ใน src/data)
-        const response = await fetch("/data/sample.xlsx");
-        const arrayBuffer = await response.arrayBuffer(); // แปลงไฟล์เป็น ArrayBuffer
-        const workbook = XLSX.read(arrayBuffer, { type: "array" }); // อ่านไฟล์ Excel
-        const sheetName = workbook.SheetNames[0]; // เลือกชื่อ Sheet แรก
-        const worksheet = workbook.Sheets[sheetName]; // ดึงข้อมูลของ Sheet
-        const jsonData = XLSX.utils.sheet_to_json(worksheet); // แปลงข้อมูลเป็น JSON
-        setData(jsonData); // เก็บข้อมูลใน State
-      } catch (error) {
-        console.error("Error reading Excel file:", error);
+    // ฟังก์ชันสำหรับอ่านไฟล์ Excel
+    const fetchExcelData = async () => {
+      try{
+        const jsonData = await readExcel("/data/sample.xlsx"); // เพิ่ม await
+        setData(jsonData);
+      }catch(err){
+        setError(err); // เก็บข้อผิดพลาดใน State
+        console.error("Error loading Excel data:", err);
       }
     };
 
-    fetchData(); // เรียกฟังก์ชันอ่านไฟล์ Excel
+    fetchExcelData();
   }, []);
 
+  const handleTabChange = (newTab) => {
+    setTab(newTab);
+  };
+
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>React Local Excel Viewer</h1>
-      <table border="1" style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          {data.length > 0 && (
-            <tr>
-              {Object.keys(data[0]).map((key, index) => (
-                <th key={index}>{key}</th>
-              ))}
-            </tr>
-          )}
-        </thead>
-        <tbody>
-          {data.map((row, rowIndex) => (
-            <tr key={rowIndex}>
-              {Object.values(row).map((value, colIndex) => (
-                <td key={colIndex}>{value}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      {tab === tabs.TAB01.id && <UpgradeInfo data={data} />}
+      {tab === tabs.TAB02.id && <UpgradeCalculator />}
+      {tab === tabs.TAB03.id && <GemTransfer />}
+
+      <Footer tabs={tabs} activeTab={tab} onChangeTab={handleTabChange}/>
+    </>
   );
 }
 
