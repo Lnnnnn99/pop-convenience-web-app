@@ -1,7 +1,11 @@
 const express = require("express");
+const path = require("path");
 const { readExcel } = require("./excel");
 
 const app = express();
+
+// Serve Static React Build
+app.use(express.static(path.join(__dirname, "../frontend/build")));
 
 // API สำหรับดึงข้อมูลจาก Excel
 app.get("/api/excel", async (req, res) => {
@@ -13,6 +17,10 @@ app.get("/api/excel", async (req, res) => {
   } catch (err) {
     res.status(500).send(err.message);
   }
+});
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
 });
 
 module.exports = app;
