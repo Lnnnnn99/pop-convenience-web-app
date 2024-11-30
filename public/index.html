@@ -1,16 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Interactive Web App</title>
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body>
-        <h1>Google Drive & Sheets API Integration (Test Update)</h1>
-        <button id="loadFiles">Load Files</button>
-        <button id="loadSheetData">Load Sheet Data</button>
-        <div id="output"></div>
-        <script src="script.js"></script>
-    </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Excel Data</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Excel Data Viewer</h1>
+  <button onclick="loadData()">Load Data</button>
+  <div id="output"></div>
+  <script>
+    async function loadData() {
+      const res = await fetch("/api/excel?sheet=Sheet1");
+      const { data } = await res.json();
+      const output = document.getElementById("output");
+      output.innerHTML = data
+        .map(row => `<p>${Object.values(row).join(", ")}</p>`)
+        .join("");
+    }
+  </script>
+</body>
 </html>

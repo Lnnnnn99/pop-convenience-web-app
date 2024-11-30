@@ -16,5 +16,10 @@
   "bugs": {
     "url": "https://github.com/Lnnnnn99/pop-convenience-web-app/issues"
   },
-  "homepage": "https://github.com/Lnnnnn99/pop-convenience-web-app#readme"
+  "homepage": "https://github.com/Lnnnnn99/pop-convenience-web-app#readme",
+  "dependencies": {
+    "express": "^4.21.1",
+    "vercel": "^39.1.2",
+    "xlsx": "^0.18.5"
+  }
 }
