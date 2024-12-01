@@ -1,0 +1,10 @@
+/* Footer */
+.footer {
+    width: 100%;
+    height: 50px; /* กำหนดความสูง Footer */
+    background-color: #333;
+    color: white;
+    text-align: center;
+    line-height: 50px; /* จัดข้อความให้อยู่กึ่งกลางแนวตั้ง */
+    z-index: 100; /* เพื่อให้อยู่เหนือเนื้อหา */
+  }

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
+import './UpgradeCalculator.css';
 
-const UpgradeCalculator = () => {
+const UpgradeCalculator = ({ setIsLoading, setError }) => {
   const [level, setLevel] = useState(1);
   const [requiredExp, setRequiredExp] = useState(0);
 
