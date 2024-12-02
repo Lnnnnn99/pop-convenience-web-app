@@ -1,0 +1,25 @@
+.beta-banner {
+    position: fixed;
+    top: 20px;
+    right: -80px;
+    transform: rotate(45deg); /* ทำให้แถบเฉียง */
+    background-color: #007bff; /* สีพื้นหลัง */
+    color: white; /* สีข้อความ */
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px 100px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* เพิ่มเงา */
+    z-index: 1; /* ให้แสดงบนสุด */
+  }
+  
+  .beta-banner span {
+    display: block;
+  }
+  
+  .beta-banner .countdown {
+    font-size: 14px;
+    margin-top: 5px;
+    color: #ffdd57; /* สีข้อความนับถอยหลัง */
+  }
+  
