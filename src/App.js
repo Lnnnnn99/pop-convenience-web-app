@@ -61,7 +61,7 @@ function App() {
         // ตั้งค่าการใช้งาน Tabs
         const enabledTabsFromMeta = meta_data.tabs_enabled || [];
         setEnabledTabs(enabledTabsFromMeta);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }catch(err){
         setError(err);
       }finally{
@@ -71,6 +71,33 @@ function App() {
 
     readMetaData();
   }, [])
+
+  const fetchMetaData = async () => {
+    try{      
+      const [meta_data] = await Promise.all([
+        readExcelAsJson(generateGoogleSheetCSVUrl(sheetId, `meta data`)),
+      ]);
+      
+      setMetaData(meta_data)
+
+      // ตั้งค่าการเปิด Beta
+      const now = new Date();
+      const betaStart = new Date(meta_data.open_beta_start);
+      const betaEnd = new Date(meta_data.open_beta_end);
+      setIsBetaActive(now >= betaStart && now <= betaEnd);
+
+      // ตั้งค่าการใช้งาน Tabs
+      const enabledTabsFromMeta = meta_data.tabs_enabled || [];
+      setEnabledTabs(enabledTabsFromMeta);
+    }catch(err){
+      setError(err);
+    }
+  } 
+
+  const setTabOnClick = async (tab) => {
+    setTab(tab)
+    await fetchMetaData()
+  }
 
   const openBetaStarted = () => {
     setIsBetaActive(true);
@@ -108,10 +135,10 @@ function App() {
                   {enabledTabs.includes(tab) && tab === tabs.TAB03.id && (
                     <GemTransfer setIsLoading={setIsLoading} setError={setError} />
                   )}
-                  {!enabledTabs.includes(tab) && <ErrorDisplay message="Tab is currently disabled." />}
+                  {!enabledTabs.includes(tab) && <ErrorDisplay message="Tab is currently disabled." fullScreen={false} />}
               </div>
 
-              <Footer tabs={tabs} activeTab={tab} onChangeTab={(tab) => setTab(tab)}/>
+              <Footer tabs={tabs} activeTab={tab} onChangeTab={(tab) => setTabOnClick(tab)}/>
             </>
           ) : (
             <FullScreenCountdown

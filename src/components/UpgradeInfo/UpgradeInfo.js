@@ -89,9 +89,9 @@ const UpgradeInfo = ({ metaData, gemsData, setIsLoading, setError }) => {
                             detail.exp ? (
                               numberWithCommas(Math.floor(detail.exp)).toString().split('').map(String).map((digit) => (
                                 <div className="digit">
-                                  <p>
+                                  <div>
                                     {digit}
-                                  </p>
+                                  </div>
                                 </div>
                               ))
                             ) : (
@@ -110,9 +110,9 @@ const UpgradeInfo = ({ metaData, gemsData, setIsLoading, setError }) => {
                             detail.exp ? (
                               numberWithCommas(Math.floor(parseInt(detail.exp) * parseFloat(metaData.exp_per_belly))).toString().split('').map(String).map((digit) => (
                                 <div className="digit">
-                                  <p>
+                                  <div>
                                     {digit}
-                                  </p>
+                                  </div>
                                 </div>
                               ))
                             ) : (

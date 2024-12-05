@@ -1,0 +1,62 @@
+.error-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    color: #fff;
+  }
+  
+  .error-content {
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: #1a1a1a;
+    color: #fff;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .error-title {
+    font-size: 1.8em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #ff4f5e;
+  }
+  
+  .error-message {
+    font-size: 1.2em;
+    color: #dcdcdc;
+  }
+  
+  /* Full Screen Style */
+  .error-display.full-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #1a1a1a;
+    z-index: 1000;
+  }
+  
+  /* Tab Content Style (ไม่เต็มหน้าจอ, สีเทา, ข้อความกลางหน้าจอ) */
+  .error-display.tab-content {
+    width: 100%;
+    height: 100%;
+    background-color: #f2f2f2; /* สีเทา */
+    color: #333; /* สีข้อความเป็นสีเทาเข้ม */
+  }
+  
+  .error-display.tab-content .error-content {
+    background-color: transparent;
+    box-shadow: none;
+    color: #333;
+  }
+  
+  .error-display.tab-content .error-title {
+    color: #ff4f5e;
+  }
+  
+  .error-display.tab-content .error-message {
+    color: #555;
+  }
+  

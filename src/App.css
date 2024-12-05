@@ -233,7 +233,8 @@ input {
   display: flex;
   justify-content: flex-end; /* จัดให้อยู่กลางแนวนอน */
   align-items: center; /* จัดให้อยู่กลางแนวตั้ง */
-  gap: 5px; /* ระยะห่างระหว่าง digit */
+  gap: 7px; /* ระยะห่างระหว่าง digit */
+  font-size: 0.8rem;
 }
 
 /* สไตล์สำหรับ digit */
