@@ -116,6 +116,7 @@ function App() {
           ) : (
             <FullScreenCountdown
               activeOpenBeta={openBetaStarted}
+              closeBeta={closeBeta}
               startTime={metaData.open_beta_start}
               endTime={metaData.open_beta_end}
               message="Open Beta Starts In:"

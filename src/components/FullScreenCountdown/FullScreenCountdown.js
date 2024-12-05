@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./FullScreenCountdown.css";
 
-const FullScreenCountdown = ({ activeOpenBeta, startTime, endTime, message }) => {
+const FullScreenCountdown = ({ activeOpenBeta, closeBeta, startTime, endTime, message }) => {
   const [timeLeft, setTimeLeft] = useState("");
   const [isBetaClosed, setIsBetaClosed] = useState(false);
 
@@ -24,6 +24,7 @@ const FullScreenCountdown = ({ activeOpenBeta, startTime, endTime, message }) =>
         // Beta หมดเวลา
         setIsBetaClosed(true);
         setTimeLeft("Open Beta Closed");
+        closeBeta(); // เรียก Callback เพื่อปิด Beta
       }
     };
 
@@ -39,7 +40,7 @@ const FullScreenCountdown = ({ activeOpenBeta, startTime, endTime, message }) =>
     const interval = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(interval); // Cleanup interval on unmount
-  }, [startTime, endTime, activeOpenBeta]);
+  }, [startTime, endTime, activeOpenBeta, closeBeta]);
 
   return (
     <div className="full-screen-countdown">
