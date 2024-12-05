@@ -10,6 +10,7 @@ import BetaBanner from "./components/BetaBanner/BetaBanner";
 import FullScreenCountdown from "./components/FullScreenCountdown/FullScreenCountdown";
 
 import { readExcelAsList, readExcelAsJson, generateGoogleSheetCSVUrl } from "./utils/readExcel"
+import { checkTimeDifference } from "./utils/timeUtils";
 
 import './App.css';
 
@@ -19,6 +20,7 @@ const tabs = {
   TAB01: {id: 'upgrade_info', label: 'Upgrade info'},
   TAB02: {id: 'upgrade_calculator', label: 'Upgrade calculator'},
   TAB03: {id: 'gem_tranfer', label: 'Gem tranfer'},
+  TAB04: {id: 'level_calculate', label: 'Level calculator'},
 }
 
 function App() {
@@ -32,6 +34,8 @@ function App() {
 
   const [isBetaActive, setIsBetaActive] = useState(false);
   const [enabledTabs, setEnabledTabs] = useState([]);
+
+  const [isTimeValid, setIsTimeValid] = useState(true); // สถานะเวลาที่ตรงกัน
 
   useEffect(() => {
     const readMetaData = async () => {
@@ -51,13 +55,23 @@ function App() {
         }));
         
         setMetaData(meta_data)
-
-        // ตั้งค่าการเปิด Beta
+        
+        // // ตั้งค่าการเปิด Beta
+        // const isValid = await checkTimeDifference()
+        // if(isValid){
+        //   const now = new Date();
+        //   const betaStart = new Date(meta_data.open_beta_start);
+        //   const betaEnd = new Date(meta_data.open_beta_end);
+        //   setIsBetaActive(now >= betaStart && now <= betaEnd);
+        // }else{
+        //   setIsTimeValid(isValid)
+        // }
+        
         const now = new Date();
         const betaStart = new Date(meta_data.open_beta_start);
         const betaEnd = new Date(meta_data.open_beta_end);
         setIsBetaActive(now >= betaStart && now <= betaEnd);
-
+          
         // ตั้งค่าการใช้งาน Tabs
         const enabledTabsFromMeta = meta_data.tabs_enabled || [];
         setEnabledTabs(enabledTabsFromMeta);
@@ -69,7 +83,17 @@ function App() {
       }
     } 
 
+    const validateTimeRealTime = async () => {
+      const interval = setInterval(async () => {
+        const isValid = await checkTimeDifference();
+        setIsTimeValid(isValid);
+      }, 60000); // ตรวจสอบทุก 5 วินาที
+
+      return () => clearInterval(interval); // ล้าง Interval เมื่อ Component ถูก unmount
+    };
+
     readMetaData();
+    // validateTimeRealTime();
   }, [])
 
   const fetchMetaData = async () => {
@@ -107,6 +131,14 @@ function App() {
     setIsBetaActive(false);
   };
 
+  if (!isTimeValid) {
+    return (
+      <ErrorDisplay 
+        message="ชิบหายละกูโดนเหลี่ยมละไง"   
+      />
+    );
+  }
+
   return (
     <div className="app-container">
       {/* แสดงสถานะ Loading หรือ Error */}
@@ -135,7 +167,7 @@ function App() {
                   {enabledTabs.includes(tab) && tab === tabs.TAB03.id && (
                     <GemTransfer setIsLoading={setIsLoading} setError={setError} />
                   )}
-                  {!enabledTabs.includes(tab) && <ErrorDisplay message="Tab is currently disabled." fullScreen={false} />}
+                  {!enabledTabs.includes(tab) && <ErrorDisplay message="กรุณาสมัคร Premium plus เพื่อเปิดใช้ฟังก์ชัน." fullScreen={false} />}
               </div>
 
               <Footer tabs={tabs} activeTab={tab} onChangeTab={(tab) => setTabOnClick(tab)}/>

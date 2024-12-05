@@ -13,7 +13,7 @@ const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
     'type': 'requiredLevel',
     'budgetUpgrade': {
       'budget': 0,
-      'currentLevel': 1,
+      'currentLevel': 0,
       'currentExp': 0
     },
     'requiredLevel':{
@@ -65,7 +65,7 @@ const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
       .filter((v) => v.level >= _currentLevel && v.level < _neededLevel)
       .reduce((a, c) => a + parseFloat(c[_color]), 0)
     
-    const _neededExp = _totalExpByLevel
+    let _neededExp = _totalExpByLevel
     const _neededBudget = _neededExp * metaData.exp_per_belly
     // 
 
@@ -73,16 +73,38 @@ const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
     const _totalExpByBudget = _budget * metaData.belly_per_exp
 
     const _expObtained = _totalExpByBudget  + _currentExp 
-    const _levelObtained = _gemData
+    let _levelObtained = _gemData
       .filter((v) => v.level >= _currentLevel)
       .reduce((a, c) => {
-        if(a.remainingExp >= c[_color]){
+        if(a.remainingExp >= c[_color] && c[_color] != 0){
           a.level = c.level
           a.remainingExp -= c[_color]
         }
         return a
       }, {level: _currentLevel, remainingExp: _expObtained})
     
+    if(_neededLevel > 30 && _star == 5){
+      _neededExp = _neededExp + " ใจเย็นนะพี่ เอาแค่ level 30 ไปก่อน"
+    }
+    if(_neededLevel > 20 && _star == 6 && !['red', 'orange', 'purple', 'green'].includes(_color)){
+      _neededExp = _neededExp + " ใจเย็นนะพี่ เอาแค่ level 20 ไปก่อน"
+    }else if(_neededLevel > 40 && _star == 6 && ['red', 'orange', 'purple', 'green'].includes(_color)){
+      _neededExp = _neededExp + " ใจเย็นนะพี่ เอาแค่ level 40 ไปก่อน"
+    }
+    
+    if(_budget < 0){
+      _levelObtained.level = _levelObtained.level + " อะไรว่ะเนี่ยยย มันลบไม่ได้โว้ยยย"
+    }
+
+    if(_levelObtained.remainingExp > 100000000){
+      _levelObtained.level = _levelObtained.level + " พอเถอะพี่ ผมเหนื่อย"
+    }else
+    if(_levelObtained.remainingExp > 1000000){
+      _levelObtained.level = _levelObtained.level + " ละพี่เขากะเอาสุดไง"
+    }else
+    if(_levelObtained.remainingExp > 100000){
+      _levelObtained.level = _levelObtained.level + " พี่ก็รวยเกินน เอาแค่นี้ไปก่อนนะ"
+    }
 
     setResult({
       ...result,
@@ -137,17 +159,17 @@ const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
               <div 
                 className={`menu-button ${detail.type === 'requiredLevel' ? 'active' : ''}`}
                 onClick={() => setDetail({...detail, type: 'requiredLevel'})}
-                ><p>Level</p></div>
+                ><p>อัพตามเลเวล</p></div>
               <div 
                 className={`menu-button ${detail.type === 'budgetUpgrade' ? 'active' : ''}`}
                 onClick={() => setDetail({...detail, type: 'budgetUpgrade'})}
-                ><p>Budget</p></div>
+                ><p>อัพตามจำนวนเงิน</p></div>
             </div>
             <div className="frame-body body-form">
               {detail.type === 'requiredLevel' && (
                 <div className="form">
                   <div className="input-group">
-                    <label htmlFor="currentLevel">Current Level</label>
+                    <label htmlFor="currentLevel">เลเวลปัจจุบัน</label>
                     <input 
                       id="currentLevel"
                       type="number"
@@ -156,7 +178,7 @@ const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
                       />
                   </div>
                   <div className="input-group">
-                    <label htmlFor="currentExp">Current EXP</label>
+                    <label htmlFor="currentExp">EXP ปัจจุบัน</label>
                     <input 
                       id="currentExp" 
                       type="number"
@@ -165,7 +187,7 @@ const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
                       />
                   </div>
                   <div className="input-group">
-                    <label htmlFor="neededLevel">Needed Level</label>
+                    <label htmlFor="neededLevel">เลเวลที่ต้องการ</label>
                     <input 
                       id="neededLevel" 
                       type="number"
@@ -178,7 +200,7 @@ const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
               {detail.type === 'budgetUpgrade' && (
                 <div className="form">
                   <div className="input-group">
-                    <label htmlFor="currentLevel">Current Level</label>
+                    <label htmlFor="currentLevel">เลเวลปัจจุบัน</label>
                     <input 
                       id="currentLevel" 
                       type="number"
@@ -187,7 +209,7 @@ const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
                       />
                   </div>
                   <div className="input-group">
-                    <label htmlFor="currentExp">Current EXP</label>
+                    <label htmlFor="currentExp">EXP ปัจจุบัน</label>
                     <input 
                       id="currentExp" 
                       type="number" 
@@ -196,7 +218,7 @@ const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
                       />
                   </div>
                   <div className="input-group">
-                    <label htmlFor="budget">Budget (M)</label>
+                    <label htmlFor="budget">เบรี่ที่ใช้ (ล้าน)</label>
                     <input 
                       id="budget" 
                       type="number" 
@@ -218,17 +240,17 @@ const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
               {
                 result.type === 'budgetUpgrade' && (
                   <>
-                    <p><strong>EXP Obtained:</strong> <span className="highlight">{numberWithCommas(Math.floor(result.expObtained))}</span></p>
-                    <p><strong>Level Obtained:</strong> <span className="highlight">{numberWithCommas(Math.floor(result.levelObtained))}</span></p>
-                    <p><strong>EXP remaining:</strong> <span className="highlight">{numberWithCommas(Math.floor(result.expRemaining))}</span></p>
+                    <p><strong>EXP ที่ได้รับ:</strong> <span className="highlight">{numberWithCommas(Math.floor(result.expObtained))}</span></p>
+                    <p><strong>อัพได้ถีงเลเวล :</strong> <span className="highlight">{result.levelObtained}</span></p>
+                    <p><strong>EXP ที่เหลือ:</strong> <span className="highlight">{numberWithCommas(Math.floor(result.expRemaining))}</span></p>
                   </> 
                 )
               }
               {
                 result.type === 'requiredLevel' && (
                   <>
-                    <p><strong>Needed Budget:</strong> <span className="highlight">{numberWithCommas(Math.floor(result.neededBudget))}</span></p>
-                    <p><strong>Needed Exp:</strong> <span className="highlight">{numberWithCommas(result.neededExp)}</span></p>
+                    <p><strong>จำนวนเบรี่ที่ต้องใช้:</strong> <span className="highlight">{numberWithCommas(Math.floor(result.neededBudget))}</span></p>
+                    <p><strong>จำนวน EXP ที่ต้องใช้:</strong> <span className="highlight">{numberWithCommas(result.neededExp)}</span></p>
                   </>
                 )
               }

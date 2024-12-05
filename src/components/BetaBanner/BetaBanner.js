@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./BetaBanner.css";
 
+import { checkTimeDifference } from "../../utils/timeUtils"; // เพิ่มการนำเข้า
+
 const BetaBanner = ({ openBetaStart, openBetaEnd, activeOpenBeta, closeBeta }) => {
   const [timeLeft, setTimeLeft] = useState(null);
   const [status, setStatus] = useState("before"); // "before", "active", "closed"
@@ -35,7 +37,7 @@ const BetaBanner = ({ openBetaStart, openBetaEnd, activeOpenBeta, closeBeta }) =
         setTimeLeft(days > 0 ? `${days}d ${hours}:${minutes}:${seconds}` : `${hours}:${minutes}:${seconds}`);
       }
     };
-
+    
     const timer = setInterval(calculateStatus, 1000);
     calculateStatus(); // Run immediately on mount
 

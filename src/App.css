@@ -92,7 +92,7 @@
 
 .frame-body{
   flex: 1;
-  background-color: #1835ed;
+  background-color: #756a5a;
   overflow: auto;
   padding: 10px 15px;
   min-height: 100px;
@@ -209,7 +209,7 @@ input {
 }
 
 .info-table tr:nth-child(odd) {
-  background-color: #c2c2c2;
+  background-color: #dfdfdf;
 }
 
 .info-table tr:hover {
