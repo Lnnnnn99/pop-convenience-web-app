@@ -103,7 +103,7 @@ function App() {
       ]);
       
       setMetaData(meta_data)
-
+      
       // ตั้งค่าการเปิด Beta
       const now = new Date();
       const betaStart = new Date(meta_data.open_beta_start);
@@ -113,6 +113,7 @@ function App() {
       // ตั้งค่าการใช้งาน Tabs
       const enabledTabsFromMeta = meta_data.tabs_enabled || [];
       setEnabledTabs(enabledTabsFromMeta);
+      
     }catch(err){
       setError(err);
     }
@@ -141,11 +142,12 @@ function App() {
 
   return (
     <div className="app-container">
+
       {/* แสดงสถานะ Loading หรือ Error */}
       {isLoading && <Loading isLoading={isLoading}/>}
       {error && <ErrorDisplay message={error} />}
 
-      {!isLoading && !error && (
+      {!isLoading && !error && isBetaActive && (
         <BetaBanner
           openBetaStart={metaData.open_beta_start}
           openBetaEnd={metaData.open_beta_end}

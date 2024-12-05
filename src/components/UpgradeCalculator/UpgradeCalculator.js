@@ -218,7 +218,7 @@ const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
                       />
                   </div>
                   <div className="input-group">
-                    <label htmlFor="budget">เบรี่ที่ใช้ (ล้าน)</label>
+                    <label htmlFor="budget">เบรี่ที่มี (ล้าน)</label>
                     <input 
                       id="budget" 
                       type="number" 
