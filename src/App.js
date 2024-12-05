@@ -7,14 +7,13 @@ import UpgradeInfo from "./components/UpgradeInfo/UpgradeInfo"
 import UpgradeCalculator from "./components/UpgradeCalculator/UpgradeCalculator"
 import GemTransfer from "./components/GemTransfer/GemTransfer"
 import BetaBanner from "./components/BetaBanner/BetaBanner";
+import FullScreenCountdown from "./components/FullScreenCountdown/FullScreenCountdown";
 
 import { readExcelAsList, readExcelAsJson, generateGoogleSheetCSVUrl } from "./utils/readExcel"
 
 import './App.css';
 
-
 const sheetId = "1wE5fiu6FZAQvd9y3GLDb9RRTLOAvtkLHKwxxPtV7Whc";
-const sheetName = "Sheet1";
 
 const tabs = {
   TAB01: {id: 'upgrade_info', label: 'Upgrade info'},
@@ -31,6 +30,9 @@ function App() {
   const [metaData, setMetaData] = useState({})
   const [gemsData, setGemsData] = useState({});
 
+  const [isBetaActive, setIsBetaActive] = useState(false);
+  const [enabledTabs, setEnabledTabs] = useState([]);
+
   useEffect(() => {
     const readMetaData = async () => {
       try{
@@ -40,13 +42,6 @@ function App() {
           readExcelAsList(generateGoogleSheetCSVUrl(sheetId, `5 star`)),
           readExcelAsList(generateGoogleSheetCSVUrl(sheetId, `6 star`)),
           readExcelAsJson(generateGoogleSheetCSVUrl(sheetId, `meta data`)),
-
-          // readExcelAsList("/datas/gems.xlsx", `6 star`),
-          // readExcelAsJson("/datas/gems.xlsx", `meta data`),
-
-          // readExcelAsList("/datas/gems.xlsx", `5 star`),
-          // readExcelAsList("/datas/gems.xlsx", `6 star`),
-          // readExcelAsJson("/datas/gems.xlsx", `meta data`),
         ]);
   
         setGemsData((prev) => ({
@@ -56,6 +51,17 @@ function App() {
         }));
         
         setMetaData(meta_data)
+
+        // ตั้งค่าการเปิด Beta
+        const now = new Date();
+        const betaStart = new Date(meta_data.open_beta_start);
+        const betaEnd = new Date(meta_data.open_beta_end);
+        setIsBetaActive(now >= betaStart && now <= betaEnd);
+
+        // ตั้งค่าการใช้งาน Tabs
+        const enabledTabsFromMeta = meta_data.tabs_enabled || [];
+        setEnabledTabs(enabledTabsFromMeta);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }catch(err){
         setError(err);
       }finally{
@@ -66,27 +72,57 @@ function App() {
     readMetaData();
   }, [])
 
+  const openBetaStarted = () => {
+    setIsBetaActive(true);
+  };
+
+  const closeBeta = () => {
+    setIsBetaActive(false);
+  };
 
   return (
     <div className="app-container">
-      <BetaBanner/>
       {/* แสดงสถานะ Loading หรือ Error */}
-      {isLoading && <Loading />}
+      {isLoading && <Loading isLoading={isLoading}/>}
       {error && <ErrorDisplay message={error} />}
 
-      { !isLoading && !error && (
-          <>
-            <div className="content">
-              {tab === tabs.TAB01.id && <UpgradeInfo metaData={metaData} gemsData={gemsData} setIsLoading={(isLoading) => setIsLoading(isLoading)} setError={(error) => setError(error)}/>}
-              {tab === tabs.TAB02.id && <UpgradeCalculator metaData={metaData} gemsData={gemsData} setIsLoading={(isLoading) => setIsLoading(isLoading)} setError={(error) => setError(error)}/>}
-              {tab === tabs.TAB03.id && <GemTransfer  setIsLoading={(isLoading) => setIsLoading(isLoading)} setError={(error) => setError(error)}/>}
-            </div>
+      {!isLoading && !error && (
+        <BetaBanner
+          openBetaStart={metaData.open_beta_start}
+          openBetaEnd={metaData.open_beta_end}
+          activeOpenBeta={openBetaStarted}
+          closeBeta={closeBeta}
+        />
+      )}
 
-            <Footer tabs={tabs} activeTab={tab} onChangeTab={(tab) => setTab(tab)}/>
-          </>
+      {!isLoading && !error && (
+          isBetaActive ? (
+            <>
+              <div className="content">
+                  {enabledTabs.includes(tab) && tab === tabs.TAB01.id && (
+                    <UpgradeInfo metaData={metaData} gemsData={gemsData} setIsLoading={setIsLoading} setError={setError} />
+                  )}
+                  {enabledTabs.includes(tab) && tab === tabs.TAB02.id && (
+                    <UpgradeCalculator metaData={metaData} gemsData={gemsData} setIsLoading={setIsLoading} setError={setError} />
+                  )}
+                  {enabledTabs.includes(tab) && tab === tabs.TAB03.id && (
+                    <GemTransfer setIsLoading={setIsLoading} setError={setError} />
+                  )}
+                  {!enabledTabs.includes(tab) && <ErrorDisplay message="Tab is currently disabled." />}
+              </div>
+
+              <Footer tabs={tabs} activeTab={tab} onChangeTab={(tab) => setTab(tab)}/>
+            </>
+          ) : (
+            <FullScreenCountdown
+              activeOpenBeta={openBetaStarted}
+              startTime={metaData.open_beta_start}
+              endTime={metaData.open_beta_end}
+              message="Open Beta Starts In:"
+            />
+          )
         )
       }
-      
     </div>
   );
 }
