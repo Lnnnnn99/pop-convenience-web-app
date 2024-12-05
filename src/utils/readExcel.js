@@ -1,137 +1,171 @@
-import * as XLSX from "xlsx";
 
-/**
- * ฟังก์ชันสำหรับอ่านไฟล์ Excel
- * @param {File} file - ไฟล์ Excel ที่ผู้ใช้เลือก
- * @returns {Promise<Array>} - Promise ที่คืนค่าเป็น Array ของข้อมูล JSON
- */
-export const readExcelAsList = async (path, sheetName = null) => {
+export const readExcelAsList = async (csvUrl) => {
   return new Promise(async (resolve, reject) => {
     try {
-      // ดึงไฟล์ Excel จากโฟลเดอร์ public
-      const response = await fetch(path);
-      const arrayBuffer = await response.arrayBuffer(); // แปลงไฟล์เป็น ArrayBuffer
-      const workbook = XLSX.read(arrayBuffer, { type: "array" }); // อ่านไฟล์ Excel
+      const response = await fetch(csvUrl);
+      const csvText = await response.text();
 
-      // ตรวจสอบว่ามีชื่อ Sheet ใน Workbook หรือไม่
-      const availableSheets = workbook.SheetNames;
+      const rows = csvText.split("\n").map((row) => row.split(","));
 
-      if (!sheetName) {
-        // หากไม่ได้ระบุ SheetName ให้ใช้ Sheet แรก
-        sheetName = availableSheets[0];
-      } else if (!availableSheets.includes(sheetName)) {
-        // หาก SheetName ไม่มีใน Workbook ให้แสดงข้อผิดพลาด
-        reject(`Sheet "${sheetName}" does not exist. Available sheets: ${availableSheets.join(", ")}`);
-        return;
-      }
+      // ลบเครื่องหมายคำพูดจาก headerRow
+      const [rawHeaderRow, ...dataRows] = rows;
+      const headerRow = rawHeaderRow.map((header) => header.replace(/^"|"$/g, "")); // ลบเครื่องหมายคำพูด
 
-      const worksheet = workbook.Sheets[sheetName]; // ดึงข้อมูลของ Sheet
-      const jsonData = XLSX.utils.sheet_to_json(worksheet); // แปลงข้อมูลเป็น Array
-      resolve(jsonData); // ส่งข้อมูลกลับ
+      const jsonData = dataRows.map((row) =>
+        headerRow.reduce((obj, header, index) => {
+          obj[header] = parseValueWithoutType(row[index]?.trim() || ""); // ใช้ parseValue แปลงค่า
+          return obj;
+        }, {})
+      );
+
+      resolve(jsonData);
     } catch (error) {
-      reject(`Error reading Excel file: ${error.message}`);
+      reject(`Error reading CSV: ${error.message}`);
     }
   });
 };
 
+const parseValueWithoutType = (value) => {
+  // ลบเครื่องหมายคำพูดซ้อน (ถ้ามี)
+  const cleanedValue = value.replace(/^"|"$/g, "");
 
-export const readExcelAsJson = async (path, sheetName = null) => {
+  // ตรวจสอบว่าเป็นตัวเลขหรือไม่
+  if (!isNaN(cleanedValue)) {
+    return Number(cleanedValue); // แปลงเป็น Number
+  }
+
+  // ตรวจสอบว่าเป็น Boolean หรือไม่
+  if (cleanedValue.toLowerCase() === "true") return true;
+  if (cleanedValue.toLowerCase() === "false") return false;
+
+  // คืนค่าเป็น String ปกติ
+  return cleanedValue;
+};
+
+const parseValue = (value, type) => {
+  switch (type.toLowerCase()) {
+    case "number":
+      return parseFloat(value);
+    case "string":
+      return value;
+    default:
+      return value; // คืนค่าเดิมหากไม่รองรับ
+  }
+};
+
+const parseKeyValueData = (data) => {
+  const result = {};
+
+  Object.entries(data).forEach(([key, value]) => {
+    const isArrayKey = key.includes("[") && key.includes("]");
+
+    if (isArrayKey) {
+      // แยก mainKey และ index
+      const [mainKey, restKey] = key.split(/\[(\d+)\]\.?/).filter(Boolean);
+      const index = parseInt(restKey, 10);
+
+      // สร้างโครงสร้าง Array หากยังไม่มี
+      if (!result[mainKey]) {
+        result[mainKey] = [];
+      }
+
+      // จัดการ Array of Objects
+      if (key.includes(".")) {
+        const [, subKey] = key.split(".");
+        if (!result[mainKey][index]) {
+          result[mainKey][index] = {};
+        }
+        result[mainKey][index][subKey] = value;
+      } else {
+        // จัดการ Array ธรรมดา
+        result[mainKey][index] = value;
+      }
+    } else {
+      // กรณี Key ธรรมดา
+      result[key] = value;
+    }
+  });
+
+  return result;
+};
+
+
+export const readExcelAsJson = async (csvUrl) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const response = await fetch(path);
-      const arrayBuffer = await response.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const response = await fetch(csvUrl);
 
-      const availableSheets = workbook.SheetNames;
-
-      // ตรวจสอบว่า Sheet มีอยู่หรือไม่
-      if (!sheetName) {
-        sheetName = availableSheets[0]; // ใช้ Sheet แรกเป็นค่าเริ่มต้น
-      } else if (!availableSheets.includes(sheetName)) {
-        reject(
-          `Sheet "${sheetName}" does not exist. Available sheets: ${availableSheets.join(
-            ", "
-          )}`
-        );
+      if (!response.ok) {
+        reject(`Failed to fetch the CSV file: ${response.statusText}`);
         return;
       }
 
-      const worksheet = workbook.Sheets[sheetName];
-      const arrayData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      const csvText = await response.text();
 
-      // ตรวจสอบว่ามีข้อมูลใน Sheet หรือไม่
-      if (arrayData.length < 2) {
-        reject("Sheet must have at least a header row and one data row.");
+      // แปลง CSV เป็น Array ของ Rows
+      const rows = csvText.split("\n").map((row) => row.split(","));
+
+      if (rows.length < 2) {
+        reject("The CSV must have at least a header row and one data row.");
         return;
       }
 
       // แยก header และข้อมูล
-      const [headerRow, ...dataRows] = arrayData;
+      const [headerRow, ...dataRows] = rows;
 
-      // ตรวจสอบว่ามี header ที่คาดหวังหรือไม่
-      if (
-        !["key", "value", "type"].every((col) => headerRow.includes(col))
-      ) {
-        reject('Sheet must contain "key", "value", and "type" columns.');
+      // ลบเครื่องหมายคำพูดและ Trim header
+      const header = headerRow.map((h) => h.replace(/^"|"$/g, "").trim());
+
+      // ตรวจสอบว่ามี header "key", "value", "type"
+      if (!["key", "value", "type"].every((col) => header.includes(col))) {
+        reject('CSV must contain "key", "value", and "type" columns.');
         return;
       }
 
       // หาค่า index ของ key, value, type
-      const keyIndex = headerRow.indexOf("key");
-      const valueIndex = headerRow.indexOf("value");
-      const typeIndex = headerRow.indexOf("type");
+      const keyIndex = header.indexOf("key");
+      const valueIndex = header.indexOf("value");
+      const typeIndex = header.indexOf("type");
 
       // ฟังก์ชันแปลงค่าตามชนิดข้อมูล
       const parseValue = (value, type) => {
+        const cleanedValue = value.replace(/^"|"$/g, "").trim();
         switch (type.toLowerCase()) {
-          case "int":
-            return parseInt(value, 10);
           case "number":
-          case "double":
-            return parseFloat(value);
-          case "array":
-            try {
-              return JSON.parse(value); // แปลงเป็น array
-            } catch {
-              return value.split(",").map((v) => v.trim());
-            }
-          case "object":
-            try {
-              return JSON.parse(value); // แปลงเป็น object
-            } catch {
-              return {}; // คืนค่าว่างหากแปลงไม่ได้
-            }
-          case "array of objects":
-            try {
-              const parsed = JSON.parse(value);
-              if (Array.isArray(parsed) && parsed.every((item) => typeof item === "object")) {
-                return parsed; // คืนค่า array of objects
-              }
-              return []; // ถ้าไม่ใช่ array of objects คืนค่าว่าง
-            } catch {
-              return []; // ถ้าแปลงไม่ได้ คืนค่าว่าง
-            }
+            return parseFloat(cleanedValue);
+          case "string":
+            return cleanedValue;
           default:
-            return value; // คืนค่าเดิมหากไม่มีชนิดข้อมูลที่รองรับ
+            return null; // หากไม่ใช่ string หรือ number
         }
       };
 
-      // แปลงข้อมูลเป็น Object
+      // แปลงข้อมูลเป็น JSON Object
       const jsonData = dataRows.reduce((result, row) => {
-        const key = row[keyIndex];
-        const value = row[valueIndex];
-        const type = row[typeIndex];
+        const key = row[keyIndex]?.replace(/^"|"$/g, "").trim();
+        const value = row[valueIndex]?.replace(/^"|"$/g, "").trim();
+        const type = row[typeIndex]?.replace(/^"|"$/g, "").trim();
 
-        if (key) {
+        if (key && (type === "string" || type === "number")) {
           result[key] = parseValue(value, type);
         }
 
         return result;
       }, {});
 
-      resolve(jsonData);
+      const parsedData = parseKeyValueData(jsonData);
+
+
+      resolve(parsedData);
     } catch (error) {
-      reject(`Error reading Excel file: ${error.message}`);
+      reject(`Error reading Google Sheet CSV: ${error.message}`);
     }
   });
+};
+
+export const generateGoogleSheetCSVUrl = (sheetId, sheetName) => {
+  if (!sheetId || !sheetName) {
+    throw new Error("Both sheetId and sheetName are required.");
+  }
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
 };

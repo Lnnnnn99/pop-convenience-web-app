@@ -1,108 +1,139 @@
 import React, { useState, useEffect } from "react";
 
-import { readExcelAsList, readExcelAsJson } from "../../utils/readExcel"
-
 import './UpgradeInfo.css';
 
-const gems = {
-  5: ['yellow', 'sky', 'blue', 'green', 'red', 'orange', 'purple'],
-  6: ['yellow', 'sky', 'blue', 'green', 'red', 'orange', 'purple'],
-}
+const sheetId = "1_RkKvX9ZSf6JFV06xVVhe74H6CIPdAzP";
+const sheetName = "Sheet1";
 
-const UpgradeInfo = ({ setIsLoading, setError }) => {
-  const [star, setStar] = useState(5)
-  const [color, setColor] = useState('red')
-  const [filterGem, setFilterGem] = useState([])
-  const [filterData, setFilterData] = useState([])
+const UpgradeInfo = ({ metaData, gemsData, setIsLoading, setError }) => {
+  const [gem, setGem] = useState({
+    'gemStar': 5,
+    'gemColor': 'red'
+  })
+
+  const [gemDetails, setGemDetails] = useState([])
 
   useEffect(() => {
-    const fetchExcelData = async () => {
-      try{
-        // setIsLoading(true)
-    
-        const jsonData = await readExcelAsList("/datas/gems.xlsx", `${star} star`);
-        // setData(jsonData);
-        setFilterGem(gems[star])
-        setFilterData(getColumn(jsonData, color))
-      }catch(err){
-        setError(err);
-      }finally{
-        setIsLoading(false)
-      }
+    const fetchGemDetails = () => {
+      setGemDetails(
+        gemsData[gem.gemStar].map((v) => ({"level": v.level, "exp": v[gem.gemColor], "belly": v[gem.gemColor] * metaData.exp_per_belly}))
+      )
     }
 
-    fetchExcelData();
-  }, []);
-
-  const getColumn = (data, c) => {
-    return data.map((o) => {return {'level': o.level, 'exp': o[c]}})
-  }
-  // useEffect(() => {
-  //   handleOnChangeStar(star)
-  // }, [])
-
-  function fetch(){
-
-  }
-
-  const handleOnChangeStar = async (starSelected) => {
-    setStar(starSelected)
-    setFilterGem(gems[starSelected])
-    const jsonData = await readExcelAsList("/datas/gems.xlsx", `${starSelected} star`);
-    setFilterData(getColumn(jsonData, color))
-    // setFilterData(data.map((o) => {return {'level': o.level, 'exp': o[color]}}))
-  }
-
-  const handleOnChangeColor = async (colorSelected) => {
-    setColor(colorSelected)
-    const jsonData = await readExcelAsList("/datas/gems.xlsx", `${star} star`);
-    setFilterData(getColumn(jsonData, colorSelected))
-    // setFilterData(data.map((o) => {return {'level': o.level, 'exp': o[colorSelected]}}))
-  }
+    fetchGemDetails()
+  }, [gem]);
 
   function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
   return (
-    <div>
-      <div>
-        <button onClick={() => handleOnChangeStar(5)}>5 star</button>
-        <button onClick={() => handleOnChangeStar(6)}>6 star</button>
+    <div className="frame-container">
+      <div className="frame-row">
+        <div className="frame-content">
+          <div className="frame-header menu-buttons">
+            {
+               metaData.stars && metaData.stars.map((star) => (
+                <div 
+                  className={`menu-button ${gem.gemStar === star.value ? 'active' : ''}`} 
+                  key={star.id}
+                  onClick={() => setGem({...gem, gemStar: star.value})}
+                ><p>{star.label}</p></div>
+              ))
+            }
+          </div>
+          <div className="frame-body body-images">
+            {
+              metaData.colors && metaData.colors.map((color) => (
+                <div 
+                  key={color}
+                  className={`body-image ${gem.gemColor === color ? 'active' : ''}`}
+                  onClick={() => setGem({...gem, gemColor: color})}
+                  >
+                  <img src={"/images/gems/" + gem.gemStar +  "_" + color + ".png"} alt={color}/>
+                </div>
+              ))
+            }
+          </div>
+        </div>
       </div>
-      <div>
-        {
-          filterGem.map((gem) => (
-            <img 
-              src={`/images/gems/${star}_${gem}.png`} 
-              alt={gem} key={gem}
-              onClick={() => handleOnChangeColor(gem)}
-            />
-          ))
-        }
+
+      <div className="frame-row">
+        <div className="frame-content">
+          <div className="frame-body body-info">
+            <table class="info-table">
+              <thead>
+                <tr>
+                  <th className="align-center">Level</th>
+                  <th className="align-center">EXP</th>
+                  <th className="align-center">Belly</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* {
+                  gemDetails.map((detail, rowIndex) => (
+                    <tr key={rowIndex}>
+                      <td className="align-center">{detail.level}</td>
+                      <td className="align-right">{numberWithCommas(parseInt(detail.exp))}</td>
+                      <td className="align-right">{numberWithCommas(Math.floor(parseInt(detail.exp) * parseFloat(metaData.exp_per_belly)))}</td>
+                    </tr>
+                  ))
+                } */}
+                {
+                  gemDetails.map((detail, rowIndex) => (
+                    <tr key={rowIndex}>
+                      <td className="align-center">{detail.level}</td>
+                      <td className="align-right">
+                        <div className="info-digit">
+                          {
+                            detail.exp ? (
+                              numberWithCommas(Math.floor(detail.exp)).toString().split('').map(String).map((digit) => (
+                                <div className="digit">
+                                  <p>
+                                    {digit}
+                                  </p>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="digit">
+                                <p>
+                                  -
+                                </p>
+                              </div>
+                            )
+                          }
+                        </div>
+                      </td>
+                      <td className="align-right">
+                      <div className="info-digit">
+                          {
+                            detail.exp ? (
+                              numberWithCommas(Math.floor(parseInt(detail.exp) * parseFloat(metaData.exp_per_belly))).toString().split('').map(String).map((digit) => (
+                                <div className="digit">
+                                  <p>
+                                    {digit}
+                                  </p>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="digit">
+                                <p>
+                                  -
+                                </p>
+                              </div>
+                            )
+                          }
+                        </div>
+                      </td>
+                      {/* <td className="align-right">{numberWithCommas(Math.floor(parseInt(detail.exp) * parseFloat(metaData.exp_per_belly)))}</td> */}
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <h1>{color}</h1>
-      <table border="1" style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th>Level</th>
-            <th>Exp</th>
-            <th>Belly</th>
-          </tr>
-        </thead>
-        <tbody>
-          {
-            filterData.map((row, rowIndex) => (
-              <tr key={rowIndex}>
-                <td>{row.level}</td>
-                <td>{numberWithCommas(parseInt(row.exp))}</td>
-                <td>{numberWithCommas(Math.floor(parseInt(row.exp) * parseFloat(140)))}</td>
-                {/* <td>{numberWithCommas(Math.floor(parseInt(row.exp) * parseFloat(metaData['exp_per_belly'])))}</td> */}
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
     </div>
   );
 };

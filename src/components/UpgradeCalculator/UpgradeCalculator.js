@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 
-import { readExcelAsList, readExcelAsJson } from "../../utils/readExcel"
-
 import './UpgradeCalculator.css';
 
 const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
