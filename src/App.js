@@ -80,7 +80,7 @@ function App() {
         if(isBetaActiveAdmin === "close"){
           closeBeta()
         }
-        
+
         // ตั้งค่าการใช้งาน Tabs
         const enabledTabsFromMeta = meta_data.tabs_enabled || [];
         setEnabledTabs(enabledTabsFromMeta);
@@ -162,7 +162,7 @@ function App() {
                   {enabledTabs.includes(tab) && tab === tabs.TAB03.id && (
                     <GemTransfer metaData={metaData} gemsData={gemsData} gemsPower={gemsPower} setIsLoading={setIsLoading} setError={setError} />
                   )}
-                  {!enabledTabs.includes(tab) && <ErrorDisplay message="รอก่อน" fullScreen={false} />}
+                  {!enabledTabs.includes(tab) && <ErrorDisplay message="ปิดปรับปรุง" fullScreen={false} />}
               </div>
 
               <Footer tabs={tabs} activeTab={tab} onChangeTab={(tab) => setTabOnClick(tab)}/>
