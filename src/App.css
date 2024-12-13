@@ -249,7 +249,7 @@
 
 /* Responsive */
 
-@media (max-width: 768px) {
+@media (max-width: 1180px) {
   .frame-body {
       font-size: 14px;
   }

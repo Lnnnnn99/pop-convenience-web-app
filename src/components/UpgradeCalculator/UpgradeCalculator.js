@@ -183,6 +183,7 @@ const UpgradeCalculator = ({ metaData, gemsData, setIsLoading, setError }) => {
                       type="number"
                       value={detail.requiredLevel.neededLevel}
                       onChange={detailOnChange} 
+                      min={detail.requiredLevel.currentLevel}
                       />
                   </div>
                 </div>

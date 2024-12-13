@@ -20,12 +20,12 @@ const tabs = {
   TAB01: {id: 'upgrade_info', label: 'Upgrade info'},
   TAB02: {id: 'upgrade_calculator', label: 'Upgrade calculator'},
   TAB03: {id: 'gem_tranfer', label: 'Gem tranfer'},
-  TAB04: {id: 'level_calculate', label: 'Level calculator'},
+  // TAB04: {id: 'level_calculate', label: 'Level calculator'},
 }
 
 function App() {
   
-  const [tab, setTab] = useState(tabs.TAB03.id);
+  const [tab, setTab] = useState(tabs.TAB02.id);
   const [isLoading, setIsLoading] = useState(true); // สถานะ Loading
   const [error, setError] = useState(null); // สถานะ Error
   
@@ -34,6 +34,7 @@ function App() {
   const [gemsPower, setGemsPower] = useState({});
 
   const [isBetaActive, setIsBetaActive] = useState(false);
+  const [isBetaActiveAdmin, setIsBetaActiveAdmin] = useState(false);
   const [enabledTabs, setEnabledTabs] = useState([]);
 
   const [isTimeValid, setIsTimeValid] = useState(true); // สถานะเวลาที่ตรงกัน
@@ -70,11 +71,16 @@ function App() {
         //   setIsTimeValid(isValid)
         // }
         
-        const now = new Date();
-        const betaStart = new Date(meta_data.open_beta_start);
-        const betaEnd = new Date(meta_data.open_beta_end);
-        setIsBetaActive(now >= betaStart && now <= betaEnd);
-          
+        // const now = new Date();
+        // const betaStart = new Date(meta_data.open_beta_start);
+        // const betaEnd = new Date(meta_data.open_beta_end);
+        // setIsBetaActive(now >= betaStart && now <= betaEnd);
+
+        setIsBetaActiveAdmin(meta_data.beta_is_open)
+        if(isBetaActiveAdmin === "close"){
+          closeBeta()
+        }
+        
         // ตั้งค่าการใช้งาน Tabs
         const enabledTabsFromMeta = meta_data.tabs_enabled || [];
         setEnabledTabs(enabledTabsFromMeta);
@@ -86,17 +92,7 @@ function App() {
       }
     } 
 
-    const validateTimeRealTime = async () => {
-      const interval = setInterval(async () => {
-        const isValid = await checkTimeDifference();
-        setIsTimeValid(isValid);
-      }, 60000); // ตรวจสอบทุก 5 วินาที
-
-      return () => clearInterval(interval); // ล้าง Interval เมื่อ Component ถูก unmount
-    };
-
     readMetaData();
-    // validateTimeRealTime();
   }, [])
 
   const fetchMetaData = async () => {
@@ -108,11 +104,10 @@ function App() {
       setMetaData(meta_data)
       
       // ตั้งค่าการเปิด Beta
-      const now = new Date();
-      const betaStart = new Date(meta_data.open_beta_start);
-      const betaEnd = new Date(meta_data.open_beta_end);
-      setIsBetaActive(now >= betaStart && now <= betaEnd);
-
+      setIsBetaActiveAdmin(meta_data.beta_is_open)
+      if(isBetaActiveAdmin === "close"){
+        closeBeta()
+      }
       // ตั้งค่าการใช้งาน Tabs
       const enabledTabsFromMeta = meta_data.tabs_enabled || [];
       setEnabledTabs(enabledTabsFromMeta);
@@ -138,7 +133,7 @@ function App() {
   if (!isTimeValid) {
     return (
       <ErrorDisplay 
-        message="ชิบหายละกูโดนเหลี่ยมละไง"   
+        message="Error"   
       />
     );
   }
@@ -151,12 +146,7 @@ function App() {
       {error && <ErrorDisplay message={error} />}
 
       {!isLoading && !error && isBetaActive && (
-        <BetaBanner
-          openBetaStart={metaData.open_beta_start}
-          openBetaEnd={metaData.open_beta_end}
-          activeOpenBeta={openBetaStarted}
-          closeBeta={closeBeta}
-        />
+        <BetaBanner/>
       )}
 
       {!isLoading && !error && (
@@ -172,15 +162,16 @@ function App() {
                   {enabledTabs.includes(tab) && tab === tabs.TAB03.id && (
                     <GemTransfer metaData={metaData} gemsData={gemsData} gemsPower={gemsPower} setIsLoading={setIsLoading} setError={setError} />
                   )}
-                  {!enabledTabs.includes(tab) && <ErrorDisplay message="กรุณาสมัคร Premium plus เพื่อเปิดใช้ฟังก์ชัน." fullScreen={false} />}
+                  {!enabledTabs.includes(tab) && <ErrorDisplay message="รอก่อน" fullScreen={false} />}
               </div>
 
               <Footer tabs={tabs} activeTab={tab} onChangeTab={(tab) => setTabOnClick(tab)}/>
             </>
           ) : (
             <FullScreenCountdown
-              activeOpenBeta={openBetaStarted}
-              closeBeta={closeBeta}
+              isBetaActiveAdmin={isBetaActiveAdmin}
+              isBetaActive={isBetaActive}
+              openBetaStarted={openBetaStarted}
               startTime={metaData.open_beta_start}
               endTime={metaData.open_beta_end}
               message="Open Beta Starts In:"
