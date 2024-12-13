@@ -25,12 +25,13 @@ const tabs = {
 
 function App() {
   
-  const [tab, setTab] = useState(tabs.TAB01.id);
+  const [tab, setTab] = useState(tabs.TAB03.id);
   const [isLoading, setIsLoading] = useState(true); // สถานะ Loading
   const [error, setError] = useState(null); // สถานะ Error
   
   const [metaData, setMetaData] = useState({})
   const [gemsData, setGemsData] = useState({});
+  const [gemsPower, setGemsPower] = useState({});
 
   const [isBetaActive, setIsBetaActive] = useState(false);
   const [enabledTabs, setEnabledTabs] = useState([]);
@@ -42,10 +43,11 @@ function App() {
       try{
         setIsLoading(true)
         
-        const [gem_5, gem_6, meta_data] = await Promise.all([
+        const [gem_5, gem_6, meta_data, gems_power] = await Promise.all([
           readExcelAsList(generateGoogleSheetCSVUrl(sheetId, `5 star`)),
           readExcelAsList(generateGoogleSheetCSVUrl(sheetId, `6 star`)),
           readExcelAsJson(generateGoogleSheetCSVUrl(sheetId, `meta data`)),
+          readExcelAsList(generateGoogleSheetCSVUrl(sheetId, `gem power`)),
         ]);
   
         setGemsData((prev) => ({
@@ -55,6 +57,7 @@ function App() {
         }));
         
         setMetaData(meta_data)
+        setGemsPower(gems_power)
         
         // // ตั้งค่าการเปิด Beta
         // const isValid = await checkTimeDifference()
@@ -167,7 +170,7 @@ function App() {
                     <UpgradeCalculator metaData={metaData} gemsData={gemsData} setIsLoading={setIsLoading} setError={setError} />
                   )}
                   {enabledTabs.includes(tab) && tab === tabs.TAB03.id && (
-                    <GemTransfer setIsLoading={setIsLoading} setError={setError} />
+                    <GemTransfer metaData={metaData} gemsData={gemsData} gemsPower={gemsPower} setIsLoading={setIsLoading} setError={setError} />
                   )}
                   {!enabledTabs.includes(tab) && <ErrorDisplay message="กรุณาสมัคร Premium plus เพื่อเปิดใช้ฟังก์ชัน." fullScreen={false} />}
               </div>

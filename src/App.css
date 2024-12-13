@@ -94,7 +94,7 @@
   flex: 1;
   background-color: #756a5a;
   overflow: auto;
-  padding: 10px 15px;
+  padding: 20px 15px;
   min-height: 100px;
 }
 
@@ -143,14 +143,15 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 1rem;
 }
 
-label {
+.input-group label  {
   min-width: 120px; 
   text-align: left;
 }
 
-input {
+.input-group input {
   min-width: 200px;
   padding: 5px 10px;
 }
